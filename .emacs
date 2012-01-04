@@ -1,3 +1,5 @@
+;;https://github.com/fmezas/dotemacs
+
 (setq inhibit-splash-screen t)
 
 (iswitchb-mode)
