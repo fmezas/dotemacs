@@ -1,8 +1,8 @@
 ;;https://github.com/fmezas/dotemacs
 
 (setq inhibit-splash-screen t)
-
 (iswitchb-mode)
+(menu-bar-mode 0)
 
 ;;;;;;;;;;;;;;;;;;
 ;; yasnippet
@@ -19,10 +19,7 @@
 (add-to-list 'ac-dictionary-directories "~/.emacs.d/auto-complete-patched//ac-dict")
 (ac-config-default)
 (setq ac-auto-start nil)
-(add-hook 'auto-complete-mode-hook
-	  '(lambda ()
-	     (define-key ac-mode-map (kbd "C-TAB") 'auto-complete)
-	     (define-key ac-mode-map "\t" 'ac-trigger-key-command)))
+(ac-set-trigger-key "TAB")
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; autopair
@@ -98,7 +95,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ropemacs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq ropemacs-enable-shortcuts nil)
+(setq ropemacs-enable-shortcuts t)
 (pymacs-load "ropemacs" "rope-")
 
 ;;;;;;;;;;;;;;;;;;
