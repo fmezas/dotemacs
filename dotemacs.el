@@ -92,8 +92,8 @@
 (setq org-agenda-show-log t
       org-agenda-todo-ignore-scheduled t
       org-agenda-todo-ignore-deadlines t)
-(setq org-agenda-files (list "~/Documents/org/personal.org"
-                             "~/Documents/org/invitae.org"))
+(setq org-agenda-files (list "~/Dropbox/org/personal.org"
+                             "~/Dropbox/org/invitae.org"))
 
 (require 'org)
 (require 'org-install)
@@ -146,7 +146,7 @@
 (setq org-ditaa-jar-path "~/.emacs.d/vendor/ditaa0_9.jar")
 (setq org-plantuml-jar-path "~/.emacs.d/vendor/plantuml.jar")
 
-(setq deft-directory "~/Documents/deft")
+(setq deft-directory "~/Dropbox/deft")
 ;; (setq deft-use-filename-as-title t)
 (setq deft-extension "org")
 (setq deft-text-mode 'org-mode)
@@ -212,6 +212,10 @@
 
 (require 'nvm)
 (nvm-use "v6.11.1")
+
+(when (eq system-type 'darwin) ;; mac specific settings
+  (exec-path-from-shell-initialize))
+
 (add-to-list 'auto-mode-alist (cons (rx ".js" eos) 'js2-mode))
 (add-hook 'js2-mode-hook (lambda () (tern-mode t)))
 (eval-after-load 'tern
