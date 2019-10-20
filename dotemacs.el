@@ -16,25 +16,29 @@
 
 (defvar fmezas/packages '(auto-complete
                           autopair
-			  base16-theme
+                          base16-theme
                           clojure-mode
                           deft
-			  editorconfig
-			  elisp-slime-nav
+                          editorconfig
+                          elisp-slime-nav
+                          exec-path-from-shell
                           flycheck
                           gist
                           graphviz-dot-mode
-			  js2-mode
+                          js2-mode
                           magit
                           markdown-mode
-			  nvm
+                          nvm
                           paredit
+                          persistent-scratch
                           restclient
-			  tern
-			  tern-auto-complete
+                          tern
+                          tern-auto-complete
                           web-mode
                           yaml-mode)
   "Default packages")
+
+(persistent-scratch-setup-default)
 
 (defun fmezas/packages-installed-p ()
   (loop for pkg in fmezas/packages
@@ -109,7 +113,7 @@
 
 (org-babel-do-load-languages
  'org-babel-load-languages
- '((sh . t)
+ '((shell . t)
    (ditaa . t)
    (plantuml . t)
    (dot . t)
@@ -211,7 +215,7 @@
 (setq markdown-css-paths `(,(expand-file-name "markdown.css" "~/.emacs.d/vendor")))
 
 (require 'nvm)
-(nvm-use "v6.11.1")
+(nvm-use "v10.15.3")
 
 (when (eq system-type 'darwin) ;; mac specific settings
   (exec-path-from-shell-initialize))
@@ -246,3 +250,6 @@
   (setq mac-option-modifier 'control)
   (setq mac-command-modifier 'meta)
   (global-set-key [kp-delete] 'delete-char)) ;; sets fn-delete to be right-delete
+
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
