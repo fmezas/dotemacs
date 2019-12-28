@@ -164,6 +164,8 @@
 (editorconfig-mode 1)
 (global-hl-line-mode 1)
 (global-flycheck-mode 1)
+(set-face-foreground 'highlight nil)
+(set-face-background 'hl-line "#e5e5e5")
 
 (require 'autopair)
 (require 'auto-complete-config)
