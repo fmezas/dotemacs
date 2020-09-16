@@ -1,257 +1,157 @@
-;; https://github.com/abedra/emacs.d
+;;; .emacs --- Foo
 
-;; System prereqs:
-;; nvm
-;; tern - (`npm install tern -g` in the node env to be used by Emacs)
+;;; Commentary:
+;;; Bar
 
+;;; Code:
 (setq user-full-name "Francisco Meza")
-(setq user-mail-address "fmezas@gmail.com")
-
-(require 'cl)
+(setq user-mail-address "francisco@evisort.com")
 
 (require 'package)
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.org/packages/") t)
 (package-initialize)
 
-(defvar fmezas/packages '(auto-complete
-                          autopair
-                          base16-theme
-                          clojure-mode
-                          deft
-                          editorconfig
-                          elisp-slime-nav
-                          exec-path-from-shell
-                          flycheck
-                          gist
-                          graphviz-dot-mode
-                          js2-mode
-                          magit
-                          markdown-mode
-                          nvm
-                          paredit
-                          persistent-scratch
-                          restclient
-                          tern
-                          tern-auto-complete
-                          web-mode
-                          yaml-mode)
-  "Default packages")
+(use-package base16-theme :ensure t)
+(use-package company
+  :ensure t
+  :hook (emacs-lisp-mode . company-mode))
+(use-package counsel
+  :ensure t
+  :config
+  (setq ivy-use-virtual-buffers t)
+  (setq ivy-count-format "(%d/%d) "))
+(use-package deft
+  :ensure t
+  :config
+  (setq deft-directory "~/Dropbox/deft")
+  ;; (setq deft-use-filename-as-title t)
+  (setq deft-extension "org")
+  (setq deft-text-mode 'org-mode))
+(use-package editorconfig :ensure t)
+(use-package flycheck :ensure t)
+(use-package js2-mode :ensure t)
+;; set prefix for lsp-command-keymap (few alternatives - "C-l", "s-l")
+(setq lsp-keymap-prefix "C-c l")
+(use-package lsp-mode
+  :ensure t
+  :hook ((python-mode . lsp))
+  :config (setq lsp-pyls-plugins-pylint-enabled nil
+                lsp-auto-configure t
+                lsp-pyls-configuration-sources ["flake8"])
+  :commands lsp)
+(use-package lsp-ui :ensure t :commands lsp-ui-mode)
+(use-package lsp-ivy :ensure t :commands lsp-ivy-workspace-symbol)
+(use-package lsp-treemacs :ensure t :commands lsp-treemacs-errors-list)
+;; optionally if you want to use debugger
+;; (use-package dap-mode)
+;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+(use-package magit :ensure t)
+(use-package markdown-mode :ensure t)
+(use-package nvm
+  :ensure t
+  :config (nvm-use "v12.18.3"))
+(use-package paredit
+  :ensure t
+  :hook (emacs-lisp-mode . paredit-mode))
+(use-package persistent-scratch :ensure t)
+(use-package projectile
+  :ensure t
+  :config
+  (setq projectile-completion-system 'ivy)
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+(use-package pyvenv :ensure t)
+(use-package repl-toggle
+  :ensure t
+  :config
+  (setq rtog/fullscreen t)
+  (setq rtog/mode-repl-alist '((typescript-mode . run-ts))))
+(use-package tide
+  :ensure t
+  :after (company flycheck js2-mode nvm repl-toggle typescript-mode)
+  :config
+  (flycheck-add-next-checker 'javascript-eslint 'javascript-tide 'append)
+  :hook ((typescript-mode . company-mode)
+	 (typescript-mode . editorconfig-mode)
+	 (typescript-mode . flycheck-mode)
+	 (typescript-mode . repl-toggle-mode)
+	 (typescript-mode . tide-setup)
+	 (typescript-mode . tide-hl-identifier-mode)
+	 (before-save . tide-format-before-save)))
+(use-package ts-comint :ensure t)
 
-(persistent-scratch-setup-default)
-
-(defun fmezas/packages-installed-p ()
-  (loop for pkg in fmezas/packages
-        when (not (package-installed-p pkg)) do (return nil)
-        finally (return t)))
-
-(unless (fmezas/packages-installed-p)
-  (message "%s" "Refreshing package database...")
-  (package-refresh-contents)
-  (dolist (pkg fmezas/packages)
-    (when (not (package-installed-p pkg))
-      (package-install pkg))))
-
-;; initial window
+;;; initial window
+;; position and size
 (setq initial-frame-alist
-      '(
-	(left . 50)
+      '((left . 50)
 	(top . 50)
-        (width . 160) ; character
-        (height . 54) ; lines
-        ))
-
+        (width . 280)
+        (height . 70)))
+;; no splash, empty initial scratch
 (setq inhibit-splash-screen t
       initial-scratch-message nil)
-
+;; keyboard-only navigation
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
 (menu-bar-mode -1)
+(global-hl-line-mode 1)
+(ivy-mode 1)
+(global-set-key (kbd "C-s") 'swiper-isearch)
 
+;;; other defaults
+(setq-default show-trailing-whitespace t)
+(setq column-number-mode t)
+;; empty lines
 (setq-default indicate-empty-lines t)
 (when (not indicate-empty-lines)
   (toggle-indicate-empty-lines))
-
+;; spaces not tabs, short tabs
 (setq tab-width 2
       indent-tabs-mode nil)
-
+;; no ~ files
 (setq make-backup-files nil)
-
+;; no bell
+(setq use-dialog-box nil
+      visible-bell t)
+;; visual cue parens)
+(show-paren-mode t)
+;; support colors in compilation buffer
+(require 'ansi-color)
+(defun colorize-compilation-buffer ()
+  (ansi-color-apply-on-region compilation-filter-start (point-max)))
+(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
+;; keyboard shortcuts
+(global-set-key (kbd "C-M-;") 'comment-or-uncomment-region)
 (global-set-key (kbd "C-+") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
 (global-set-key (kbd "C-x O") 'previous-multiframe-window)
-
-(setq use-dialog-box nil
-      visible-bell t)
-(show-paren-mode t)
-
-(setq org-log-done t
-      org-todo-keywords '((sequence "TODO" "INPROGRESS" "DONE"))
-      org-todo-keyword-faces '(("INPROGRESS" . (:foreground "orange" :weight bold))))
-(add-hook 'org-mode-hook
-          (lambda ()
-            (flyspell-mode)))
-
-(global-set-key (kbd "C-c a") 'org-agenda)
-(setq org-agenda-show-log t
-      org-agenda-todo-ignore-scheduled t
-      org-agenda-todo-ignore-deadlines t)
-(setq org-agenda-files (list "~/Dropbox/org/personal.org"
-                             "~/Dropbox/org/invitae.org"))
-
-(require 'org)
-(require 'org-install)
-(require 'org-habit)
-(add-to-list 'org-modules "org-habit")
-(setq org-habit-preceding-days 7
-      org-habit-following-days 1
-      org-habit-graph-column 80
-      org-habit-show-habits-only-for-today t
-      org-habit-show-all-today t)
-
-(require 'ob)
-
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((shell . t)
-   (ditaa . t)
-   (plantuml . t)
-   (dot . t)
-   (ruby . t)
-   (js . t)
-   (C . t)))
-
-(add-to-list 'org-src-lang-modes (quote ("dot". graphviz-dot)))
-(add-to-list 'org-src-lang-modes (quote ("plantuml" . fundamental)))
-(add-to-list 'org-babel-tangle-lang-exts '("clojure" . "clj"))
-
-(defvar org-babel-default-header-args:clojure
-  '((:results . "silent") (:tangle . "yes")))
-
-(defun org-babel-execute:clojure (body params)
-  (lisp-eval-string body)
-  "Done!")
-
-;; (provide 'ob-clojure)
-(org-babel-do-load-languages
-      'org-babel-load-languages
-      '((emacs-lisp . t)
-        (python . t)))
-
-(setq org-src-fontify-natively t
-      org-confirm-babel-evaluate nil)
-
-(add-hook 'org-babel-after-execute-hook (lambda ()
-                                          (condition-case nil
-                                              (org-display-inline-images)
-                                            (error nil)))
-          'append)
-
-(setq org-ditaa-jar-path "~/.emacs.d/vendor/ditaa0_9.jar")
-(setq org-plantuml-jar-path "~/.emacs.d/vendor/plantuml.jar")
-
-(setq deft-directory "~/Dropbox/deft")
-;; (setq deft-use-filename-as-title t)
-(setq deft-extension "org")
-(setq deft-text-mode 'org-mode)
-
-(ido-mode t)
-(setq ido-enable-flex-matching t
-      ido-use-virtual-buffers t)
-
-(setq column-number-mode t)
-
-(editorconfig-mode 1)
-(global-hl-line-mode 1)
-(global-flycheck-mode 1)
-(set-face-foreground 'highlight nil)
-(set-face-background 'hl-line "#e5e5e5")
-
-(require 'autopair)
-(require 'auto-complete-config)
-(ac-config-default)
-
-(defun untabify-buffer ()
-  (interactive)
-  (untabify (point-min) (point-max)))
-
-(defun indent-buffer ()
-  (interactive)
-  (indent-region (point-min) (point-max)))
-
-(defun cleanup-buffer ()
-  "Perform a bunch of operations on the whitespace content of a buffer."
-  (interactive)
-  (indent-buffer)
-  (untabify-buffer)
-  (delete-trailing-whitespace))
-
-(defun cleanup-region (beg end)
-  "Remove tmux artifacts from region."
-  (interactive "r")
-  (dolist (re '("\\\\│\·*\n" "\W*│\·*"))
-    (replace-regexp re "" nil beg end)))
-
-(global-set-key (kbd "C-x M-t") 'cleanup-region)
-(global-set-key (kbd "C-c n") 'cleanup-buffer)
-
-(setq-default show-trailing-whitespace t)
-
-(setq flyspell-issue-welcome-flag nil)
-(if (eq system-type 'darwin)
-    (setq-default ispell-program-name "/usr/local/bin/aspell")
-  (setq-default ispell-program-name "/usr/bin/aspell"))
-(setq-default ispell-list-command "list")
-
-(add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
-(add-to-list 'auto-mode-alist '("\\.yaml$" . yaml-mode))
-
-(add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))
-(add-to-list 'auto-mode-alist '("\\.mdown$" . markdown-mode))
-(add-hook 'markdown-mode-hook
-          (lambda ()
-            (visual-line-mode t)
-            (writegood-mode t)
-            (flyspell-mode t)))
-(setq markdown-command "pandoc --smart -f markdown -t html")
-(setq markdown-css-paths `(,(expand-file-name "markdown.css" "~/.emacs.d/vendor")))
-
-(require 'nvm)
-(nvm-use "v10.15.3")
-
-(when (eq system-type 'darwin) ;; mac specific settings
-  (exec-path-from-shell-initialize))
-
-(add-to-list 'auto-mode-alist (cons (rx ".js" eos) 'js2-mode))
-(add-hook 'js2-mode-hook (lambda () (tern-mode t)))
-(eval-after-load 'tern
-   '(progn
-      (require 'tern-auto-complete)
-      (tern-ac-setup)))
-(add-hook 'js2-mode-hook (lambda () (setq ac-sources (append '(ac-source-tern-completion) ac-sources))))
-
-(setq ac-sources (append '(ac-source-tern-completion) ac-sources))
-
-(require 'elisp-slime-nav)
-(dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
-(add-hook hook 'elisp-slime-nav-mode))
 
 (if window-system
     (load-theme 'base16-railscasts t)
   (load-theme 'wombat t))
 
-(require 'ansi-color)
-(defun colorize-compilation-buffer ()
-  (toggle-read-only)
-  (ansi-color-apply-on-region (point-min) (point-max))
-  (toggle-read-only))
-(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
-
-;; key bindings for OSX
-(when (eq system-type 'darwin) ;; mac specific settings
-  (setq mac-option-modifier 'control)
-  (setq mac-command-modifier 'meta)
-  (global-set-key [kp-delete] 'delete-char)) ;; sets fn-delete to be right-delete
-
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
+;;; .emacs ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(counsel use-package ts-comint tide repl-toggle persistent-scratch paredit nvm markdown-mode magit js2-mode editorconfig deft company base16-theme))
+ '(persistent-scratch-autosave-interval 5)
+ '(persistent-scratch-save-file "/home/francisco/Dropbox/.persistent-scratch")
+ '(ts-comint-program-command
+   "/home/francisco/code/tsplayground/node_modules/.bin/ts-node"))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+;;; persistent scratch
+(persistent-scratch-autosave-mode 1)
+(persistent-scratch-restore)
