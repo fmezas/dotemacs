@@ -31,6 +31,21 @@
 (use-package editorconfig :ensure t)
 (use-package flycheck :ensure t)
 (use-package js2-mode :ensure t)
+;; set prefix for lsp-command-keymap (few alternatives - "C-l", "s-l")
+(setq lsp-keymap-prefix "C-c l")
+(use-package lsp-mode
+  :ensure t
+  :hook ((python-mode . lsp))
+  :config (setq lsp-pyls-plugins-pylint-enabled nil
+                lsp-auto-configure t
+                lsp-pyls-configuration-sources ["flake8"])
+  :commands lsp)
+(use-package lsp-ui :ensure t :commands lsp-ui-mode)
+(use-package lsp-ivy :ensure t :commands lsp-ivy-workspace-symbol)
+(use-package lsp-treemacs :ensure t :commands lsp-treemacs-errors-list)
+;; optionally if you want to use debugger
+;; (use-package dap-mode)
+;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 (use-package magit :ensure t)
 (use-package markdown-mode :ensure t)
 (use-package nvm
@@ -40,6 +55,13 @@
   :ensure t
   :hook (emacs-lisp-mode . paredit-mode))
 (use-package persistent-scratch :ensure t)
+(use-package projectile
+  :ensure t
+  :config
+  (setq projectile-completion-system 'ivy)
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+(use-package pyvenv :ensure t)
 (use-package repl-toggle
   :ensure t
   :config
