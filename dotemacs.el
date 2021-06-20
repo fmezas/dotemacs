@@ -12,63 +12,97 @@
              '("melpa" . "http://melpa.org/packages/") t)
 (package-initialize)
 
-(use-package base16-theme :ensure t)
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(eval-when-compile
+  (require 'use-package))
+
+;; Enable defer and ensure by default for use-package
+;; Keep auto-save/backup files separate from source code:  https://github.com/scalameta/metals/issues/1027
+(setq ;;use-package-always-defer t
+      use-package-always-ensure t
+      backup-directory-alist `((".*" . ,temporary-file-directory))
+      auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
+
+(use-package base16-theme)
 (use-package company
-  :ensure t
-  :hook (emacs-lisp-mode . company-mode))
+  :hook ((emacs-lisp-mode . company-mode)
+	 (scala-mode . company-mode))
+  :config (setq lsp-completion-provider :capf))
 (use-package counsel
-  :ensure t
   :config
   (setq ivy-use-virtual-buffers t)
   (setq ivy-count-format "(%d/%d) "))
 (use-package deft
-  :ensure t
   :config
   (setq deft-directory "~/Dropbox/deft")
   ;; (setq deft-use-filename-as-title t)
   (setq deft-extension "org")
   (setq deft-text-mode 'org-mode))
-(use-package editorconfig :ensure t)
-(use-package flycheck :ensure t)
-(use-package js2-mode :ensure t)
+(use-package editorconfig)
+(use-package flycheck)
+(use-package scala-mode
+  :after (flycheck)
+  :interpreter ("scala" . scala-mode)
+  :hook (scala-mode . flycheck-mode))
+(use-package sbt-mode
+  :after (flycheck)
+  :commands sbt-start sbt-command
+  :config
+  ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+  ;; allows using SPACE when in the minibuffer
+  (substitute-key-definition
+   'minibuffer-complete-word
+   'self-insert-command
+   minibuffer-local-completion-map)
+   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+  (setq sbt:program-options '("-Dsbt.supershell=false"))
+  :hook (scala-mode . flycheck-mode))
+(use-package js2-mode)
 ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "s-l")
 (setq lsp-keymap-prefix "C-c l")
 (use-package lsp-mode
-  :ensure t
-  :hook ((python-mode . lsp))
-  :config (setq lsp-pyls-plugins-pylint-enabled nil
-                lsp-auto-configure t
-                lsp-pyls-configuration-sources ["flake8"])
+  :hook ((scala-mode . lsp)
+	 (python-mode . lsp)
+	 (lsp-mode . lsp-lens-mode))
+  :config
+  (setq lsp-pyls-plugins-pylint-enabled nil
+        lsp-auto-configure t
+        lsp-pyls-configuration-sources ["flake8"])
+  (setq lsp-prefer-flymake nil)
   :commands lsp)
-(use-package lsp-ui :ensure t :commands lsp-ui-mode)
-(use-package lsp-ivy :ensure t :commands lsp-ivy-workspace-symbol)
-(use-package lsp-treemacs :ensure t :commands lsp-treemacs-errors-list)
+(use-package lsp-metals)
+(use-package lsp-ui :commands lsp-ui-mode)
+(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 ;; optionally if you want to use debugger
 ;; (use-package dap-mode)
 ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-(use-package magit :ensure t)
-(use-package markdown-mode :ensure t)
+(use-package magit)
+(use-package markdown-mode)
 (use-package nvm
-  :ensure t
-  :config (nvm-use "v12.18.3"))
+;;  :config (nvm-use "v14.17.0")
+  )
 (use-package paredit
-  :ensure t
   :hook (emacs-lisp-mode . paredit-mode))
-(use-package persistent-scratch :ensure t)
+(use-package persistent-scratch
+  :custom
+  ;; (persistent-scratch-save-file
+  ;;  "/home/francisco/Dropbox/.persistent-scratch-personal")
+  (persistent-scratch-autosave-interval 5))
 (use-package projectile
-  :ensure t
   :config
   (setq projectile-completion-system 'ivy)
   (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
-(use-package pyvenv :ensure t)
+(use-package pyvenv)
 (use-package repl-toggle
-  :ensure t
   :config
   (setq rtog/fullscreen t)
   (setq rtog/mode-repl-alist '((typescript-mode . run-ts))))
 (use-package tide
-  :ensure t
   :after (company flycheck js2-mode nvm repl-toggle typescript-mode)
   :config
   (flycheck-add-next-checker 'javascript-eslint 'javascript-tide 'append)
@@ -79,7 +113,9 @@
 	 (typescript-mode . tide-setup)
 	 (typescript-mode . tide-hl-identifier-mode)
 	 (before-save . tide-format-before-save)))
-(use-package ts-comint :ensure t)
+(use-package ts-comint
+  ;; :custom (ts-comint-program-command "/home/francisco/code/tsplayground/node_modules/.bin/ts-node")
+  )
 
 ;;; initial window
 ;; position and size
@@ -139,12 +175,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(counsel use-package ts-comint tide repl-toggle persistent-scratch paredit nvm markdown-mode magit js2-mode editorconfig deft company base16-theme))
- '(persistent-scratch-autosave-interval 5)
- '(persistent-scratch-save-file "/home/francisco/Dropbox/.persistent-scratch")
- '(ts-comint-program-command
-   "/home/francisco/code/tsplayground/node_modules/.bin/ts-node"))
+ )
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
